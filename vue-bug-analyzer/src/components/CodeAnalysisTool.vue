@@ -176,81 +176,23 @@ const extractPrInfo = (url) => {
 const analyzeCode = async () => {
   isAnalyzing.value = true;
   
-  // Simulate analysis delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Generate sample report
-  const reqSummary = requirementDocs.value
-    .filter(doc => doc.content.trim())
-    .map((doc, index) => `- Document ${index + 1}: ${doc.content.length} characters`);
-  
-  const prSummary = pullRequests.value
-    .filter(pr => pr.url.trim())
-    .map((pr, index) => {
-      const prInfo = extractPrInfo(pr.url);
-      if (prInfo) {
-        return `- [PR #${prInfo.number}](${pr.url}) in ${prInfo.owner}/${prInfo.repo}`;
-      } else {
-        return `- PR ${index + 1}: ${pr.url}`;
-      }
-    });
-  
-  // Generate sample findings
-  const findings = [
-    {
-      title: "Missing Error Handling",
-      severity: "High",
-      description: "The code does not handle potential errors when processing user input.",
-      requirement: "System must gracefully handle all error conditions.",
-      location: "PR #123, File: user-service.js, Lines 24-30",
-      recommendation: "Implement try-catch blocks around user input processing."
-    },
-    {
-      title: "Incomplete Validation Logic",
-      severity: "Medium",
-      description: "Input validation is incomplete compared to requirements.",
-      requirement: "All user inputs must be validated for type, length, and format.",
-      location: "PR #123, File: validation.js, Lines 42-55",
-      recommendation: "Add additional validation checks for input format."
-    },
-    {
-      title: "Potential Race Condition",
-      severity: "Medium",
-      description: "Concurrent operations may lead to race conditions.",
-      requirement: "System must handle concurrent user operations safely.",
-      location: "PR #124, File: data-service.js, Lines 17-25",
-      recommendation: "Implement proper locking mechanism or use atomic operations."
+  try {
+    // Simulate analysis delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Use fetch to get the markdown file
+    const response = await fetch('/src/components/result.md');
+    if (!response.ok) {
+      throw new Error('Failed to fetch markdown file');
     }
-  ];
-  
-  // Create markdown report
-  report.value = `# Code Analysis Report
-
-## Summary
-Analysis completed at ${new Date().toLocaleString()}
-
-### Requirements Documents
-${reqSummary.length ? reqSummary.join('\n') : '- No requirements provided'}
-
-### Pull Requests Analyzed
-${prSummary.length ? prSummary.join('\n') : '- No pull requests provided'}
-
-## Findings
-
-${findings.map(finding => `
-### ${finding.title}
-- **Severity**: ${finding.severity}
-- **Description**: ${finding.description}
-- **Requirement Reference**: ${finding.requirement}
-- **Location**: ${finding.location}
-- **Recommendation**: ${finding.recommendation}
-`).join('\n')}
-
-## Conclusion
-The analysis identified ${findings.length} potential issues. Please review the findings and implement the recommended changes to improve code quality and alignment with requirements.
-`;
-
-  isAnalyzing.value = false;
+    const markdownContent = await response.text();
+    report.value = markdownContent;
+  } catch (error) {
+    console.error('Error reading markdown file:', error);
+    report.value = '# Error\nUnable to read the analysis report.';
+  } finally {
+    isAnalyzing.value = false;
+  }
 };
 
 // Render markdown as HTML using marked library
